@@ -62,7 +62,7 @@ func login(c *colly.Collector, config UbiquitiCredentials) error {
 	}
 	reader := bytes.NewReader(loginPayload)
 
-	err = c.Request("POST", "httddps://sso.ui.com/api/sso/v1/login", reader, nil, http.Header{"Content-Type": []string{"application/json"}})
+	err = c.Request("POST", "https://sso.ui.com/api/sso/v1/login", reader, nil, http.Header{"Content-Type": []string{"application/json"}})
 	if err != nil {
 		return fmt.Errorf("Error logging in: %v", err)
 	}
