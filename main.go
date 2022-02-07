@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/bassiebal/ubiquiti-store-notifier/pkg/bot"
+	"github.com/bassiebal/ubiquiti-store-notifier/pkg/config"
 	"github.com/bassiebal/ubiquiti-store-notifier/pkg/database"
 	"github.com/bassiebal/ubiquiti-store-notifier/pkg/scraper"
 )
 
 func main() {
-	config := getConfig()
+	config := config.GetConfig()
 
 	db, err := database.Connect("./database.db")
 	if err != nil {
@@ -43,6 +44,8 @@ func main() {
 		}
 
 		if reflect.DeepEqual(product, dbProduct) {
+			log.Printf("No Change for product: %s, with price: %v and availability: %v", product.Name, product.Price, product.Available)
+
 			continue
 		}
 
@@ -55,19 +58,19 @@ func main() {
 			logError(fmt.Errorf("Error inserting product: %v", err))
 		}
 
-		if product.Available && !dbProduct.Available {
-			err = bot.SendUpdate(&config.Telegram, &product)
-			if err != nil {
-				logError(fmt.Errorf("Error sending telegram update: %v", err))
-			}
+		//if product.Available && !dbProduct.Available {
+		err = bot.SendUpdate(&config.Telegram, &product)
+		if err != nil {
+			logError(fmt.Errorf("Error sending telegram update: %v", err))
 		}
+		//}
 
 	}
 
 }
 
 func logError(message error) {
-	err := bot.SendError(&getConfig().Telegram, message)
+	err := bot.SendError(&config.GetConfig().Telegram, message)
 	if err != nil {
 		log.Printf("Could not send error to telegram: %v\n", err)
 	}
