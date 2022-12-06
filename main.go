@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/bassiebal/ubiquiti-store-notifier/pkg/bot"
@@ -43,6 +44,14 @@ func main() {
 			logError(fmt.Errorf("Unable to retrieve product from database: %v", err))
 		}
 
+		_, err = db.NamedExec(fmt.Sprintf(`
+				INSERT INTO products (name, price, link, available, inserted_at)
+				VALUES (:name, :price, :link, :available, %d)
+			`, updateTimestamp), product)
+		if err != nil {
+			logError(fmt.Errorf("Error inserting product: %v", err))
+		}
+
 		if reflect.DeepEqual(product, dbProduct) {
 			log.Printf("No Change for product: %s, with price: %v and availability: %v", product.Name, product.Price, product.Available)
 
@@ -50,12 +59,10 @@ func main() {
 		}
 
 		log.Printf("Change for product: %s, with price: %v and availability: %v", product.Name, product.Price, product.Available)
-		_, err = db.NamedExec(fmt.Sprintf(`
-				INSERT INTO products (name, price, link, available, inserted_at)
-				VALUES (:name, :price, :link, :available, %d)
-			`, updateTimestamp), product)
-		if err != nil {
-			logError(fmt.Errorf("Error inserting product: %v", err))
+
+		if !strings.Contains(product.Name, "Dream Machine Special Edition") {
+			log.Printf("Skipping notifications for non Dream Machine Special Edition product: %s\n", product.Name)
+			continue
 		}
 
 		//if product.Available && !dbProduct.Available {
